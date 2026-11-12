@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.maestro.app.ReaderViewModel
 import com.maestro.app.face.GestureConfig
 import com.maestro.app.face.GestureType
+import com.maestro.app.face.MisfireProtection
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -69,15 +70,19 @@ fun SettingsScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(12.dp))
-        GestureDropdown(
+        OptionDropdown(
             label = "Next page",
             selected = draft.nextGesture,
+            options = GestureType.entries,
+            optionLabel = { it.label },
             onSelect = { commit(draft.copy(nextGesture = it)) }
         )
         Spacer(Modifier.height(12.dp))
-        GestureDropdown(
+        OptionDropdown(
             label = "Previous page",
             selected = draft.prevGesture,
+            options = GestureType.entries,
+            optionLabel = { it.label },
             onSelect = { commit(draft.copy(prevGesture = it)) }
         )
 
@@ -115,6 +120,20 @@ fun SettingsScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
         HorizontalDivider()
         Spacer(Modifier.height(20.dp))
         SectionTitle("Timing (anti-misfire)")
+        Text(
+            "Misfire protection decides how much a head turn, wink or smile has to look like a deliberate gesture. It ignores glancing down at the music or keys, nodding, a face that just came back into view, and a second face behind you. Raise it if pages turn when you didn't ask; lower it if real gestures get ignored.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(12.dp))
+        OptionDropdown(
+            label = "Misfire protection",
+            selected = draft.protection,
+            options = MisfireProtection.entries,
+            optionLabel = { it.label },
+            onSelect = { commit(draft.copy(protection = it)) }
+        )
+        Spacer(Modifier.height(8.dp))
 
         SliderRow(
             label = "Hold time (head turn, wink, smile)",
@@ -169,10 +188,12 @@ private fun SectionTitle(text: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun GestureDropdown(
+private fun <T> OptionDropdown(
     label: String,
-    selected: GestureType,
-    onSelect: (GestureType) -> Unit
+    selected: T,
+    options: List<T>,
+    optionLabel: (T) -> String,
+    onSelect: (T) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
@@ -180,7 +201,7 @@ private fun GestureDropdown(
         onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
-            value = selected.label,
+            value = optionLabel(selected),
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
@@ -188,11 +209,11 @@ private fun GestureDropdown(
             modifier = Modifier.menuAnchor().fillMaxWidth()
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            GestureType.entries.forEach { gesture ->
+            options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(gesture.label) },
+                    text = { Text(optionLabel(option)) },
                     onClick = {
-                        onSelect(gesture)
+                        onSelect(option)
                         expanded = false
                     }
                 )

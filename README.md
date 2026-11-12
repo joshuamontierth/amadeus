@@ -37,10 +37,10 @@ visible so you still see searching / ready / wait while reading. Double-tap to r
 CameraX (front, ImageAnalysis, no preview)
         │  frames
         ▼
-FaceAnalyzer ── ML Kit FaceDetector ──► FaceSignals(yaw, leftEyeOpen, rightEyeOpen)
+FaceAnalyzer ── ML Kit FaceDetector ──► FaceSelection ──► FaceSignals(yaw, pitch, roll, eyes, smile)
         │
         ▼
-GestureEngine (dwell + cooldown + re-arm state machine)
+GestureEngine (settle + gates + dwell + cooldown + re-arm state machine)
         │  PageAction.NEXT / PREVIOUS
         ▼
 ReaderViewModel ──► PdfController (android.graphics.pdf.PdfRenderer) ──► page bitmap
@@ -54,31 +54,50 @@ ReaderScreen (Jetpack Compose): full-page view, status dot, tap zones, controls
   any gesture to *Next* / *Previous* in Settings, so if left/right feel mirrored on your
   device you just swap them. Head turn, wink and smile are held poses (dwell timer);
   long blink and double blink are events from a debounced blink tracker.
-- **Anti-misfire** — layered safeguards (sliders in Settings, the rest built in):
-  - **Dwell** for held poses: hold ~350 ms before firing; a short grace window keeps
-    the hold alive through single dropped frames.
+- **Anti-misfire**: layered safeguards (sliders and a **Misfire protection** level in Settings,
+  the rest built in):
+  - **Dwell** for held poses: hold ~350 ms before firing. Only frames that actually show the
+    pose count toward it, so a dropped frame pauses the hold rather than ending it, and a pose
+    that wobbles around its threshold is kept once entered (it relaxes to 80% while held).
+  - **Neutral first:** a gesture only counts after the face has been seen at rest for a moment
+    (0.4 s on Balanced). A face that has just come into view, or comes back after you looked away
+    or left the frame, never turns a page by already being turned.
+  - **Square-on gate:** nothing counts while your head is pitched away from where it rests
+    (glancing down at the keys or the music), tipped toward a shoulder, or nodding along to the
+    beat. ML Kit's yaw and eye estimates are unreliable there. Eye and smile gestures also need
+    the head roughly frontal (within 20° of rest).
+  - **Adaptive rest pose:** your resting yaw and pitch follow slow drift in how you sit (a tablet
+    standing off to one side), up to 10°, so gestures are measured from where your head rests.
+    A deliberate turn is too fast and too large to be absorbed.
   - **Debounced blink tracking:** the eyes-closed state uses dual thresholds
     (hysteresis) and must persist ≥2 frames / 70 ms before it flips, so one noisy
     ML Kit frame can never fake, split, or end a blink.
-  - **Long blink** has its own duration slider (default 700 ms) — comfortably above
-    natural blinks (~100–400 ms), which are classified separately and ignored.
+  - **Long blink** has its own duration slider (default 700 ms): comfortably above
+    natural blinks (~100–400 ms), which are classified separately and ignored. It needs eyes
+    that were open first, and a closure that starts like a blink: eyelids that droop as your gaze
+    drops to the keys or your lap never count.
   - **Double blink** = two crisp blinks (80–400 ms each) with a clean reopen between
-    them, at most 450 ms apart, after ≥200 ms of open eyes — so rapid natural blink
+    them, at most 450 ms apart, after ≥200 ms of open eyes, so rapid natural blink
     flutter can't chain into a trigger.
-  - **Head-pose gate:** eye and smile gestures are ignored while the head is turned
-    >20° or pitched >25° off the camera (e.g. glancing down at the keys), where
-    ML Kit's eye probabilities are unreliable.
-  - **Cooldown + re-arm:** after a turn, new turns are blocked for ~1.2 s *and* the
-    face must return to neutral (eyes open) — so a held pose can't page repeatedly.
+  - **One reader:** the largest face is the reader. A second face nearly as large (someone
+    leaning in) or a face cut off by the edge of the frame pauses gestures until it clears.
+  - **Cooldown + re-arm:** after a turn, new turns are blocked for ~1.2 s *and* the face must sit
+    at rest again for a moment (0.25 s on Balanced), so a held pose can't page repeatedly and a
+    head swinging back past centre doesn't turn the other way.
+  - **Misfire protection** (Settings) scales the settling time, the tilt, roll and nod limits, the
+    re-arm time and how large a second face may be: *Relaxed*, *Balanced* (default) or *Strict*.
 - **Status dot** (bottom-right): grey = searching, green = ready, amber = holding,
-  blue = cooldown, red = camera permission needed. A small line shows live yaw / pitch /
+  blue = cooldown or settling, red = camera permission needed. A small line shows live yaw / pitch /
   eye values to help you tune thresholds (and see when the head-pose gate is active).
 
 ## Project layout
 
 | Path | What |
 |---|---|
-| `app/src/main/java/com/maestro/app/face/Gesture.kt` | Gesture model + `GestureEngine` (pure logic) |
+| `app/src/main/java/com/maestro/app/face/Gesture.kt` | Gesture model, `GestureConfig`, `MisfireProtection` |
+| `…/face/GestureEngine.kt` | Frames → page turns: dwell, gates, rest pose, cooldown (pure logic) |
+| `…/face/BlinkTracker.kt` | Debounced blink / double-blink / long-blink events (pure logic) |
+| `…/face/FaceSelection.kt` | Picks the reader's face and rejects untrustworthy frames (pure logic) |
 | `…/face/FaceAnalyzer.kt` | ML Kit analyzer → `FaceSignals` |
 | `…/face/CameraGesture.kt` | Binds CameraX front camera while detection is active |
 | `…/pdf/PdfController.kt` | `PdfRenderer` wrapper → page bitmaps |
@@ -86,7 +105,7 @@ ReaderScreen (Jetpack Compose): full-page view, status dot, tap zones, controls
 | `…/ReaderViewModel.kt` | App state: document, pages, detection, config |
 | `…/ui/ReaderScreen.kt` | Reader UI |
 | `…/ui/SettingsScreen.kt` | Gesture mapping + sensitivity |
-| `app/src/test/java/.../face/GestureEngineTest.kt` | Unit tests for the safety logic |
+| `app/src/test/java/.../face/` | Unit tests: scripted frame sequences for real gestures and false alarms |
 | `app/src/main/assets/sample_score.pdf` | Bundled placeholder score for "Open sample" |
 
 ## Build

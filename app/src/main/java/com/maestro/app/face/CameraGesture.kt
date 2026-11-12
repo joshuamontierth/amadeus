@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
 
-private const val TAG = "Maestro.Camera"
+private const val TAG = "Amadeus.Camera"
 
 /**
  * Binds the front camera's [ImageAnalysis] use case to the current lifecycle while

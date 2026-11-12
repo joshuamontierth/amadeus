@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.maestro.app.face.GestureConfig
 import com.maestro.app.face.GestureType
+import com.maestro.app.face.MisfireProtection
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -29,6 +30,7 @@ class SettingsStore(private val context: Context) {
         val DWELL = longPreferencesKey("dwell_ms")
         val COOLDOWN = longPreferencesKey("cooldown_ms")
         val LONG_BLINK = longPreferencesKey("long_blink_ms")
+        val PROTECTION = stringPreferencesKey("misfire_protection")
         val ENABLED = booleanPreferencesKey("enabled_by_default")
     }
 
@@ -44,6 +46,7 @@ class SettingsStore(private val context: Context) {
             dwellMs = prefs[Keys.DWELL] ?: defaults.dwellMs,
             cooldownMs = prefs[Keys.COOLDOWN] ?: defaults.cooldownMs,
             longBlinkMs = prefs[Keys.LONG_BLINK] ?: defaults.longBlinkMs,
+            protection = prefs[Keys.PROTECTION]?.let { MisfireProtection.fromName(it) } ?: defaults.protection,
             enabledByDefault = prefs[Keys.ENABLED] ?: defaults.enabledByDefault
         )
     }
@@ -59,6 +62,7 @@ class SettingsStore(private val context: Context) {
             prefs[Keys.DWELL] = config.dwellMs
             prefs[Keys.COOLDOWN] = config.cooldownMs
             prefs[Keys.LONG_BLINK] = config.longBlinkMs
+            prefs[Keys.PROTECTION] = config.protection.name
             prefs[Keys.ENABLED] = config.enabledByDefault
         }
     }
