@@ -86,8 +86,8 @@ ReaderScreen (Jetpack Compose): full-page view, status dot, tap zones, controls
     head swinging back past centre doesn't turn the other way.
   - **Misfire protection** (Settings) scales the settling time, the tilt, roll and nod limits, the
     re-arm time and how large a second face may be: *Relaxed*, *Balanced* (default) or *Strict*.
-- **Status dot** (bottom-right): grey = searching, green = ready, amber = holding,
-  blue = cooldown or settling, red = camera permission needed. A small line shows live yaw / pitch /
+- **Status dot** (bottom-right): grey = searching, green = ready, gold = holding,
+  wine = cooldown or settling, red = camera permission needed. A small line shows live yaw / pitch /
   eye values to help you tune thresholds (and see when the head-pose gate is active).
 
 ## Project layout
@@ -105,6 +105,7 @@ ReaderScreen (Jetpack Compose): full-page view, status dot, tap zones, controls
 | `…/ReaderViewModel.kt` | App state: document, pages, detection, config |
 | `…/ui/ReaderScreen.kt` | Reader UI |
 | `…/ui/SettingsScreen.kt` | Gesture mapping + sensitivity |
+| `…/ui/theme/` | Material 3 light and dark schemes (wine, cream, gold), heading typeface |
 | `app/src/test/java/.../face/` | Unit tests: scripted frame sequences for real gestures and false alarms |
 | `app/src/main/assets/sample_score.pdf` | Bundled placeholder score for "Open sample" |
 
@@ -142,3 +143,7 @@ Since winking and head-turning can be awkward, good comfortable pairings are
 [MIT](LICENSE). Face detection uses Google's
 [ML Kit](https://developers.google.com/ml-kit), which is distributed under its own
 [terms](https://developers.google.com/ml-kit/terms).
+
+Headings are set in [EB Garamond](http://www.georgduffner.at/ebgaramond) and the launcher icon's
+treble clef is traced from [Bravura](https://github.com/steinbergmedia/bravura)'s G clef. Both are
+under the SIL Open Font License 1.1; the notices are in `app/src/main/assets/licenses/`.

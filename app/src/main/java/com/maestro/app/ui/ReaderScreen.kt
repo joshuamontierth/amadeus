@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -41,17 +42,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.maestro.app.R
 import com.maestro.app.ReaderUiState
 import com.maestro.app.ReaderViewModel
 import com.maestro.app.face.CameraGestureEffect
@@ -85,7 +90,7 @@ fun ReaderScreen(
     CameraGestureEffect(active = detectionActive, analyzer = viewModel.faceAnalyzer)
     ImmersiveSystemBars(hidden = immersive)
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         if (!state.hasDocument) {
             EmptyState(
                 isLoading = state.isLoading,
@@ -149,16 +154,26 @@ private fun ImmersiveSystemBars(hidden: Boolean) {
 private fun EmptyState(isLoading: Boolean, onOpen: () -> Unit, onOpenSample: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Amadeus", color = Color.White, style = MaterialTheme.typography.headlineMedium)
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_monochrome),
+                contentDescription = null,
+                modifier = Modifier.size(120.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+            )
+            Text(
+                "Amadeus",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.headlineMedium
+            )
             Spacer(Modifier.size(8.dp))
             Text(
                 "Open a PDF score, then turn pages with a glance.",
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.size(24.dp))
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator()
             } else {
                 Button(onClick = onOpen) { Text("Open PDF") }
                 Spacer(Modifier.size(12.dp))
@@ -227,16 +242,16 @@ private fun ControlBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.55f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f))
             .statusBarsPadding()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = onOpen) { Text("Open", color = Color.White) }
+        TextButton(onClick = onOpen) { Text("Open") }
         Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
             Text(
                 text = state.fileName ?: "No document",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleSmall
@@ -244,15 +259,15 @@ private fun ControlBar(
             if (state.hasDocument) {
                 Text(
                     text = "Page ${state.pageIndex + 1} / ${state.pageCount}",
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
         }
-        Text("Gestures", color = Color.White, style = MaterialTheme.typography.labelMedium)
+        Text("Gestures", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelMedium)
         Spacer(Modifier.width(4.dp))
         Switch(checked = state.detectionEnabled, onCheckedChange = onToggleDetection)
-        TextButton(onClick = onOpenSettings) { Text("Settings", color = Color.White) }
+        TextButton(onClick = onOpenSettings) { Text("Settings") }
     }
 }
 
@@ -263,25 +278,26 @@ private fun StatusOverlay(
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (color, label) = statusVisual(state, hasCameraPermission)
+    val (color, label) = statusVisual(state, hasCameraPermission, MaterialTheme.colorScheme)
     val noRipple = remember { MutableInteractionSource() }
 
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.94f),
+                RoundedCornerShape(12.dp)
+            )
+            .clickable(interactionSource = noRipple, indication = null) {
+                if (!hasCameraPermission) onRequestPermission()
+            }
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.End
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
-                .clickable(interactionSource = noRipple, indication = null) {
-                    if (!hasCameraPermission) onRequestPermission()
-                }
-                .padding(horizontal = 10.dp, vertical = 6.dp)
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(12.dp).clip(CircleShape).background(color))
             Spacer(Modifier.width(8.dp))
-            Text(label, color = Color.White, style = MaterialTheme.typography.labelMedium)
+            Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelMedium)
         }
 
         if (state.detectionEnabled && hasCameraPermission && state.lastSignals.present) {
@@ -289,7 +305,7 @@ private fun StatusOverlay(
             val s = state.lastSignals
             Text(
                 text = "yaw ${s.yaw.toInt()}°  pitch ${s.pitch.toInt()}°  ·  L ${eye(s.leftEyeOpen)}  R ${eye(s.rightEyeOpen)}",
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelSmall
             )
         }
@@ -298,13 +314,18 @@ private fun StatusOverlay(
 
 private fun eye(v: Float): String = if (v < 0f) "--" else String.format("%.2f", v)
 
-private fun statusVisual(state: ReaderUiState, hasCameraPermission: Boolean): Pair<Color, String> {
-    if (!hasCameraPermission) return Color(0xFFE53935) to "Tap to allow camera"
-    if (!state.detectionEnabled) return Color(0xFF9E9E9E) to "Gestures off"
+private fun statusVisual(
+    state: ReaderUiState,
+    hasCameraPermission: Boolean,
+    scheme: ColorScheme
+): Pair<Color, String> {
+    if (!hasCameraPermission) return scheme.error to "Tap to allow camera"
+    if (!state.detectionEnabled) return scheme.outline to "Gestures off"
+    val ready = if (scheme.background.luminance() < 0.5f) Color(0xFF7CCB93) else Color(0xFF2E7D4F)
     return when (state.status) {
-        EngineStatus.NO_FACE -> Color(0xFF9E9E9E) to "Searching for face"
-        EngineStatus.READY -> Color(0xFF43A047) to "Ready"
-        EngineStatus.ARMING -> Color(0xFFFFB300) to "Hold…"
-        EngineStatus.COOLDOWN -> Color(0xFF1E88E5) to "Wait"
+        EngineStatus.NO_FACE -> scheme.outline to "Searching for face"
+        EngineStatus.READY -> ready to "Ready"
+        EngineStatus.ARMING -> scheme.tertiary to "Hold…"
+        EngineStatus.COOLDOWN -> scheme.primary to "Wait"
     }
 }
