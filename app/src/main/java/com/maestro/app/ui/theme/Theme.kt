@@ -10,7 +10,7 @@ private val DarkColors = darkColorScheme()
 private val LightColors = lightColorScheme()
 
 @Composable
-fun MaestroTheme(content: @Composable () -> Unit) {
+fun AmadeusTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors,
         content = content

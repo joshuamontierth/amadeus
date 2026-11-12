@@ -149,7 +149,7 @@ private fun ImmersiveSystemBars(hidden: Boolean) {
 private fun EmptyState(isLoading: Boolean, onOpen: () -> Unit, onOpenSample: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Maestro", color = Color.White, style = MaterialTheme.typography.headlineMedium)
+            Text("Amadeus", color = Color.White, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.size(8.dp))
             Text(
                 "Open a PDF score, then turn pages with a glance.",

@@ -1,13 +1,13 @@
-<p align="center"><img src="icon.png" width="160" alt="Maestro icon"></p>
+<p align="center"><img src="icon.png" width="160" alt="Amadeus icon"></p>
 
-# Maestro
+# Amadeus
 
 A hands-free **sheet-music PDF reader** for Android, in the spirit of forScore. Open a
 score, prop your tablet on the music stand, and turn pages with a **facial gesture**
 (a head turn or a wink) so your hands never leave the instrument.
 
 Face tracking runs **fully on-device and offline** via Google ML Kit's bundled model.
-Maestro doesn't request the Internet permission, so neither camera frames nor anything
+Amadeus doesn't request the Internet permission, so neither camera frames nor anything
 else can leave the device.
 
 <p align="center">
@@ -17,8 +17,8 @@ else can leave the device.
 
 ## Install
 
-Download the latest `maestro-<version>.apk` from
-[Releases](https://github.com/joshuamontierth/maestro/releases) and open it on your
+Download the latest `amadeus-<version>.apk` from
+[Releases](https://github.com/joshuamontierth/amadeus/releases) and open it on your
 Android tablet or phone (allow "install unknown apps" for your browser or file manager
 when asked). Requires Android 8.0+ on an ARM device (all current phones and tablets) with
 a front camera.
@@ -27,7 +27,7 @@ a front camera.
 
 MVP. Open one PDF → render a page (tablet, portrait) → turn pages by gesture, tap, or
 the bundled sample. Gesture mapping and sensitivity are fully configurable.
-**Double-tap** the page for a clean, immersive full-screen view (hides Maestro's
+**Double-tap** the page for a clean, immersive full-screen view (hides Amadeus's
 top controls and the Android system bars; the small gesture-status indicator stays
 visible so you still see searching / ready / wait while reading. Double-tap to restore).
 
@@ -130,7 +130,7 @@ without one they fall back to the debug key.
 1. Enable **Developer options → USB debugging** on your Android tablet/phone and plug it in.
 2. `adb devices` — confirm it shows up.
 3. `adb install -r app/build/outputs/apk/debug/app-debug.apk`
-4. Launch **Maestro**, grant the camera permission, tap **Open sample score** (or open
+4. Launch **Amadeus**, grant the camera permission, tap **Open sample score** (or open
    your own PDF), then use your chosen gesture to flip pages. Tune in **Settings**;
    double-tap the page for immersive full-screen.
 
